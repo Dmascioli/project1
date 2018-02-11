@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #pragma pack(1)
 
 
@@ -36,9 +37,6 @@ struct pixel {
 
 int main(int argc, char *argv[]) {
 
-	int w;
-	int h;
-
 	if(argc == 1) {
 		printf("Usage: ./bmp_edit [-option] [filename]\n");
 		return 1;
@@ -71,11 +69,13 @@ int main(int argc, char *argv[]) {
 
 	fseek(input_image, image_header.offset, SEEK_SET);
 	
-	int row_padding = image_dib.img_width * 3 % 4;
+	int row_padding = 4 - (image_dib.img_width * 3 % 4);
+	if(row_padding == 4)
+		row_padding = 0;
 
 
-	for(h = 0; h < image_dib.img_height; h++) {
-		for(w = 0; w < image_dib.img_width; w++) {
+	for(int h = 0; h < image_dib.img_height; h++) {
+		for(int w = 0; w < image_dib.img_width; w++) {
 			struct pixel pix;
 			fread(&pix, 1, 3, input_image);
 
@@ -84,13 +84,35 @@ int main(int argc, char *argv[]) {
 				pix.green = ~pix.green;
 				pix.red = ~pix.red;
 			}
+			else if(strcmp(argv[1], "-grayscale") == 0) {
+				float norm_blue = (float) pix.blue / 255.0;
+				float norm_green = (float) pix.green / 255.0;
+				float norm_red = (float) pix.red / 255.0;
+				float y = .2126 * norm_red + .7152 * norm_green + .0722 * norm_blue;
+
+				if(y <= .003138){
+					pix.blue = (unsigned char) 12.92*y;
+					pix.green = (unsigned char) 12.92*y;
+					pix.red = (unsigned char) 12.92*y;
+				}
+				else {		
+					pix.blue = (unsigned char) 1.055 * pow(y, 1.0/2.4) - .055;
+					pix.green = (unsigned char) 1.055 * pow(y, 1.0/2.4) - .055;
+					pix.red = (unsigned char) 1.055 * pow(y, 1.0/2.4) - .055;
+				}
+			}
+			else {
+				printf("Option not supported. Use '-invert' or '-grayscale'\n");
+				return 1;
+			}
 
 			fseek(input_image, -3, SEEK_CUR);
 			fwrite(&pix, 1, 3, input_image);
 
 		}
+		
+		fseek(input_image, row_padding, SEEK_CUR);
 	}
-
 
 
 	return 0;
