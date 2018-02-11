@@ -13,15 +13,15 @@
 #include <time.h>
 
 
-char str_input[20];
-char choices[3][10];
-int player_wins = 0;
-int comp_wins = 0;
+char str_input[20]; /* input buffer */
+char choices[3][10]; /* strings of choices */
+int player_wins = 0; /* track player wins */
+int comp_wins = 0; /* track computer wins */
 
 void play_game() {
 	
-	char player_choice[10];
-	int comp_choice;
+	char player_choice[10]; /* string of player's choice */
+	int comp_choice; /* computer's choice */
 
 	while(player_wins < 5 && comp_wins < 5) {
 		printf("What is your choice? ");
@@ -67,12 +67,12 @@ void play_game() {
 
 
 int main() {
-
+	/* set choices array of strings */
 	strcpy(choices[0], "rock");
 	strcpy(choices[1], "paper");
 	strcpy(choices[2], "scissors");
 
-
+	/* seed random number */
 	srand((unsigned int)time(NULL));
 
 
